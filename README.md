@@ -29,7 +29,7 @@ Thus, in total there are 4 Akka Streams which are materialised. Two consuming St
 
 The following diagram shows the 4 Akka Streams which are created (in green), along with the Akka Actors which serve as the Sinks (for consumer Streams) and Sources (for producer Streams). The Akka Actors and Akka Streams are integrated using `Source.queue(_,OverflowStrategy.backpressure)` for the producer Streams and `Sink.actorRefWithAck` for the consumer Streams so that we have full backpressure both ways as per the Akka [documentation](http://doc.akka.io/docs/akka/2.4.16/scala/stream/stream-integrations.html).
 
-There are two Kafka topics **TestDataChannel** and **AppEventChannel** on the Kafka message broker.  Then, (case class) messages `KafkaMessage` and `ExampleAppEvent` are converted to JSON and are published/consumed to/from their respective Kafka topics.
+There are two Kafka topics **TestDataChannel** and **AppEventChannel** on the Kafka message broker.  Then, (case class) messages `KafkaMessage` and `ExampleAppEvent` are converted to binary messages via auto generated code by ScalaPB and are published/consumed to/from their respective Kafka topics.
 
 ![alt tag](https://raw.githubusercontent.com/omearac/reactive-kafka-microservice-template/master/images/app_stream_flow.gif)
 
@@ -43,7 +43,7 @@ Stream Creation Patterns
 The process of creating a consumer Stream involves the following steps as illustrated in the below animation. The ConsumerStreamManager is an Actor who is responsible for the lifecycle of the consumer Akka Stream, i.e. he creates, runs and can terminate them. A consumer Actor serves as the messages endpoint (the Sink) of the Streams. Once a Consumer Actor (who will act as the Stream Sink) and the ConsumerStreamManager are created:
 
 
-1.  An `InititializeConsumerStream` message is sent to the manager with the reference to the Consumer Actor and the message type (case class) the consumed JSON data from Kafka must be converted to
+1.  An `InititializeConsumerStream` message is sent to the manager with the reference to the Consumer Actor and the message type (case class) the consumed message data from Kafka must be converted to
 2. Upon receiving this message, the StreamManager initialises the Akka Stream using information from the `application.conf` settings file using the Reactive-Kafka library. 
 3. Once the stream has started, the message type and stream reference is saved to a collection so the Stream can be terminated on command if necessary. The StreamManager then tells the Consumer Actor the stream has materialised by sending it an `ActivatedConsumerStream(Topic)` message and also emits a event to the local EventBus associated to the ActorSystem.
 4. Upon receiving the `ActivatedConsumerStream` message from the ConsumerStreamManager, the ConsumerActor saves the address of the ConsumerStreamManager. The Actor stays in its "non-consuming state" until it receives the `STREAM_INIT` message from the Akka Stream in which case the Actor then changes state to Consuming mode bia Akka's `become` method. The reference to the ConsumerStreamManager is kept in order to manually terminate the stream (which can be done by the Akka HTTP front end as described below).
@@ -54,7 +54,7 @@ The process of creating a consumer Stream involves the following steps as illust
 ### Creating a Producer Stream
 The process of creating a producer Stream is essentially the same concept as creating the Consumer Stream, except now the Producer Actor is the Akka Stream Source. Again, we create an instance of the ProducerStreamManager. This Actor is responsible for the lifecycle of the producer Akka Stream, i.e. he creates and runs them.  Once a Producer Actor and the ProducerStreamManager are created:
 
- 1. An `InititializeProducerStream` message is sent to the manager with the reference to the Producer Actor and the message type (case class) the consumed JSON data from Kafka must be converted to
+ 1. An `InititializeProducerStream` message is sent to the manager with the reference to the Producer Actor and the message type (case class) the consumed message data from Kafka must be converted to
  2. Upon receiving this message, the StreamManager initialises the Akka Stream using information from the `application.conf` settings file using the Reactive-Kafka library. 
  3. Once the stream has started, the StreamManager then tells the Producer Actor the stream has materialised and passes it the streams reference in the message `ActivatedProducerStream(streamRef, Topic)`. An event describing what has occurred is then published to the local EventBus associated to the ActorSystem.
  4. Upon receiving the `ActivatedProducerStream` message from the ProducerStreamManager, the Producer Actor then changes state to be in Publishing mode via Akka's `become`method.
