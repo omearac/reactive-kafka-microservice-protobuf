@@ -4,8 +4,7 @@ import akka.stream.scaladsl.SourceQueueWithComplete
 
 
 /**
-  * EventMessages are those which are emitted throughout the application and KafkaMessages are those which
-  * are converted to/from JSON to be published/consumed to/from Kafka.
+  * EventMessages are those which are emitted throughout the application
   * The EventMessages are converted to ExampleAppEvents when they are published.
   */
 
@@ -17,9 +16,4 @@ object EventMessages {
     case class MessagesPublished(numberOfMessages: Int) extends EventMessage
     case class FailedMessageConversion(kafkaTopic: String, msg: String, msgType: String) extends EventMessage
 }
-
-//object KafkaMessages {
-//    case class KafkaMessage(time: String, subject: String, item: Int)
-//    case class ExampleAppEvent(time: String, senderID: String, eventType: String)
-//}
 
