@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package messages;
+
+option java_package = "com.omearac";
+
+message KafkaMessage {
+  string time = 1;
+  string subject = 2;
+  int32 item = 3;
+}
+
+message ExampleAppEvent {
+  string time = 1;
+  string senderID = 2;
+  string eventType = 3;
+}
